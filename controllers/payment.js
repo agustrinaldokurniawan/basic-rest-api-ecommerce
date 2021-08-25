@@ -241,6 +241,59 @@ class PaymentController {
       return res.status(error.status || 500).json(error);
     }
   }
+  static async createInvoice(req, res) {
+    try {
+      const { externalID, amount, payerEmail, description } = req.body;
+
+      const x = new xendit({ secretKey: process.env.XENDIT_DEV });
+
+      if (!externalID) {
+        throw {
+          message: "External ID is required",
+        };
+      }
+
+      if (!amount) {
+        throw {
+          message: "Amount is required",
+        };
+      }
+
+      if (!payerEmail) {
+        throw {
+          message: "Email Payer is required",
+        };
+      }
+
+      if (!description) {
+        throw {
+          message: "Description is required",
+        };
+      }
+
+      const { Invoice } = x;
+      const invoiceSpecificOptions = {};
+      const i = new Invoice(invoiceSpecificOptions);
+
+      const resp = await i
+        .createInvoice({
+          externalID,
+          amount,
+          payerEmail,
+          description,
+        })
+        .catch((error) => {
+          throw {
+            message: "Something wrong while create Invoice",
+            error,
+          };
+        });
+
+      return res.json({ resp });
+    } catch (error) {
+      return res.status(error.status || 500).json(error);
+    }
+  }
 }
 
 module.exports = PaymentController;
