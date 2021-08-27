@@ -8,6 +8,7 @@ route
   .get("/getVA", PaymentController.getVA)
   .post("/createDisbursement", PaymentController.createDisbursement)
   .get("/getDisbursement", PaymentController.getDisbursement)
-  .post("/createInvoice", PaymentController.createInvoice);
+  .post("/createInvoice", PaymentController.createInvoice)
+  .post("/callbackDisbursement", PaymentController.callbaackDisbursement);
 
 module.exports = route;

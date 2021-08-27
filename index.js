@@ -28,6 +28,7 @@ try {
 
   const xenditInvoice = require("./routes/xendit/invoice");
   const xenditAccount = require("./routes/xendit/account");
+  const xenditTransfer = require("./routes/xendit/transfer");
 
   app.use("/users", userRoutes);
   app.use("/media", mediaRoutes);
@@ -38,6 +39,7 @@ try {
 
   app.use("/xendit/invoice", xenditInvoice);
   app.use("/xendit/account", xenditAccount);
+  app.use("/xendit/transfer", xenditTransfer);
 
   const server = app.listen(3000);
   if (server) console.log("Server running is success");

@@ -131,6 +131,16 @@ class PaymentController {
         description,
       } = req.body;
 
+      //   {
+      //     "bankCode":"BNI",
+      //     "externalID":"123456",
+      //     "name":"agust",
+      //     "amount":100000,
+      //     "accountHolderName":"agust",
+      //     "accountNumber":"1234567890",
+      //     "description":"description payment"
+      // }
+
       if (!bankCode) {
         throw {
           message: "Bank Code is require. (Ex: BNI, BCA, BRI)",
@@ -220,6 +230,19 @@ class PaymentController {
         description,
       });
 
+      //   {
+      //     "resp": {
+      //         "status": "PENDING",
+      //         "user_id": "60f93c954ada1254cae9f7b1",
+      //         "external_id": "123456",
+      //         "amount": 100000,
+      //         "bank_code": "BNI",
+      //         "account_holder_name": "Agust",
+      //         "disbursement_description": "description payment",
+      //         "id": "61260602b341890017636958"
+      //     }
+      // }
+
       return res.json({ resp });
     } catch (error) {
       return res.status(error.status || 500).json(error);
@@ -228,6 +251,7 @@ class PaymentController {
   static async getDisbursement(req, res) {
     try {
       const { id } = req.query;
+      // id = 612614eb6c2e5400174bf162
 
       const x = new xendit({ secretKey: process.env.XENDIT_DEV });
       const { Disbursement } = x;
@@ -235,6 +259,19 @@ class PaymentController {
       const d = new Disbursement(disbursementSpecificOptions);
 
       const resp = await d.getByID({ disbursementID: id });
+
+      //   {
+      //     "resp": {
+      //         "status": "PENDING",
+      //         "user_id": "60f93c954ada1254cae9f7b1",
+      //         "external_id": "123456",
+      //         "amount": 100000,
+      //         "bank_code": "BNI",
+      //         "account_holder_name": "agust",
+      //         "disbursement_description": "description payment",
+      //         "id": "612614eb6c2e5400174bf162"
+      //     }
+      // }
 
       return res.json({ resp });
     } catch (error) {
@@ -292,6 +329,20 @@ class PaymentController {
       return res.json({ resp });
     } catch (error) {
       return res.status(error.status || 500).json(error);
+    }
+  }
+  static async callbaackDisbursement(req, res) {
+    try {
+      const { body } = req;
+
+      console.log("Callback Disbursement is called");
+      console.log(body);
+
+      // {"body":{"id":"579c8d61f23fa4ca35e52da4","external_id":"invoice_123124123","user_id":"5781d19b2e2385880609791c","is_high":true,"payment_method":"BANK_TRANSFER","status":"PAID","merchant_name":"Xendit","amount":50000,"paid_amount":50000,"bank_code":"PERMATA","paid_at":"2016-10-12T08:15:03.404Z","payer_email":"wildan@xendit.co","description":"This is a description","adjusted_received_amount":47500,"fees_paid_amount":0,"updated":"2016-10-10T08:15:03.404Z","created":"2016-10-10T08:15:03.404Z","currency":"IDR","payment_channel":"PERMATA","payment_destination":"888888888888"}}
+
+      return res.json({ body });
+    } catch (error) {
+      return res.status(500).json(error);
     }
   }
 }
