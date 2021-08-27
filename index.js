@@ -25,6 +25,7 @@ try {
   const blogRoutes = require("./routes/blog");
   const addressRoutes = require("./routes/address");
   const paymentRoutes = require("./routes/payment");
+  const emailRoutes = require("./routes/email");
 
   const xenditInvoice = require("./routes/xendit/invoice");
   const xenditAccount = require("./routes/xendit/account");
@@ -36,6 +37,7 @@ try {
   app.use("/address", addressRoutes);
   app.use("/blog", blogRoutes);
   app.use("/payment", paymentRoutes);
+  app.use("/email", emailRoutes);
 
   app.use("/xendit/invoice", xenditInvoice);
   app.use("/xendit/account", xenditAccount);
