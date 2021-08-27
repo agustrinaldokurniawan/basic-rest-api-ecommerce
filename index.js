@@ -3,9 +3,6 @@ const bodyParser = require("body-parser");
 const mongoose = require("mongoose");
 require("dotenv").config();
 
-const swaggerUi = require("swagger-ui-express");
-const swaggerJsdoc = require("swagger-jsdoc");
-
 try {
   const connectMongoose = mongoose
     .connect("mongodb://localhost:27017/first", {
@@ -23,19 +20,14 @@ try {
   app.use(bodyParser.urlencoded({ extended: true }));
   app.use(bodyParser.json());
 
-  const {
-    route: userRoutes,
-    openapiSpecification: userSpec,
-  } = require("./routes/user");
-
+  const userRoutes = require("./routes/user");
   const mediaRoutes = require("./routes/media");
-  const {
-    route: blogRoutes,
-    openapiSpecification: blogSpec,
-  } = require("./routes/blog");
-
+  const blogRoutes = require("./routes/blog");
   const addressRoutes = require("./routes/address");
   const paymentRoutes = require("./routes/payment");
+
+  const xenditInvoice = require("./routes/xendit/invoice");
+  const xenditAccount = require("./routes/xendit/account");
 
   app.use("/users", userRoutes);
   app.use("/media", mediaRoutes);
@@ -44,8 +36,8 @@ try {
   app.use("/blog", blogRoutes);
   app.use("/payment", paymentRoutes);
 
-  app.use("/api-docs/user", swaggerUi.serve, swaggerUi.setup(userSpec));
-  app.use("/api-docs/blog", swaggerUi.serve, swaggerUi.setup(blogSpec));
+  app.use("/xendit/invoice", xenditInvoice);
+  app.use("/xendit/account", xenditAccount);
 
   const server = app.listen(3000);
   if (server) console.log("Server running is success");
