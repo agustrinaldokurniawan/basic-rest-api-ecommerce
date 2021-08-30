@@ -18,6 +18,7 @@ const userSchema = new Schema({
     deviceModel: String,
     deviceVersion: String,
   },
+  type: String,
 });
 
 const User = mongoose.model("User", userSchema);

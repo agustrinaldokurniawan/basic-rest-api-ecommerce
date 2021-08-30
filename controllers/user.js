@@ -4,12 +4,16 @@ const jwt = require("jsonwebtoken");
 const CryptoJS = require("crypto-js");
 const secret = "somesecret";
 
+const Kozii = require("../models/kozii");
+const Mitra = require("../models/mitra");
+const Merchant = require("../models/merchant");
+
 const ValidationHelper = require("../helper/validation");
 
 class UserController {
   static async signup(req, res) {
     try {
-      const { nama, email, alamat, password, userID, appPin, device } =
+      const { nama, email, alamat, password, userID, appPin, device, type } =
         await req.body;
 
       if (!nama) {
@@ -78,6 +82,7 @@ class UserController {
         userID,
         appPin,
         device,
+        type,
       });
 
       await newUser.save().then((docs) => {
@@ -153,6 +158,78 @@ class UserController {
       return res.json({ token });
     } catch (error) {
       return res.status(error.status).json(error);
+    }
+  }
+
+  static async createSeller(req, res) {
+    try {
+      const { name, email, levelSeller } = await req.body;
+
+      if (!name || !email || !levelSeller) {
+        throw new Error("Some property required is missing");
+      }
+
+      const newSeller = await new Seller({
+        name,
+        email,
+        levelSeller,
+      });
+      console.log({ newSeller });
+      if (!newSeller.levelSeller) {
+        throw new Error("Error while create new Seller Object");
+      }
+
+      await newSeller.save();
+
+      return res.json(newSeller);
+    } catch (error) {
+      return res.status(500).json(error);
+    }
+  }
+
+  static async createKozii(req, res) {
+    try {
+      const { name } = req.body;
+
+      const newKozii = new Kozii({
+        name,
+      });
+
+      await newKozii.save();
+
+      return res.json(newKozii);
+    } catch (error) {
+      return res.status(500).json(error.message);
+    }
+  }
+  static async createMitra(req, res) {
+    try {
+      const { name } = req.body;
+
+      const newMitra = new Mitra({
+        name,
+      });
+
+      await newMitra.save();
+
+      return res.json(newMitra);
+    } catch (error) {
+      return res.status(500).json(error.message);
+    }
+  }
+  static async createMerchant(req, res) {
+    try {
+      const { name } = req.body;
+
+      const newMerchant = new Merchant({
+        name,
+      });
+
+      await newMerchant.save();
+
+      return res.json(newMerchant);
+    } catch (error) {
+      return res.status(500).json(error.message);
     }
   }
 }

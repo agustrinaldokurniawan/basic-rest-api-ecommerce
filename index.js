@@ -26,6 +26,8 @@ try {
   const addressRoutes = require("./routes/address");
   const paymentRoutes = require("./routes/payment");
   const emailRoutes = require("./routes/email");
+  const feedRoutes = require("./routes/feed");
+  const notifRoutes = require("./routes/notification");
 
   const xenditInvoice = require("./routes/xendit/invoice");
   const xenditAccount = require("./routes/xendit/account");
@@ -38,6 +40,8 @@ try {
   app.use("/blog", blogRoutes);
   app.use("/payment", paymentRoutes);
   app.use("/email", emailRoutes);
+  app.use("/feed", feedRoutes);
+  app.use("/notif", notifRoutes);
 
   app.use("/xendit/invoice", xenditInvoice);
   app.use("/xendit/account", xenditAccount);
