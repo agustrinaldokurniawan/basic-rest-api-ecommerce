@@ -93,6 +93,10 @@ class UserController {
     try {
       const { email } = await req.body;
 
+      //   {
+      //     "email":"agustkurniawan010899@gmail.com"
+      // }
+
       const searchQueryByEmail = await { "loginInfo.email": email };
 
       const user = await User.findOne(searchQueryByEmail).exec();
@@ -140,6 +144,49 @@ class UserController {
       await sgMail
         .send(msg)
         .then((response) => {
+          //   [
+          //     {
+          //         "statusCode": 202,
+          //         "headers": {
+          //             "server": "nginx",
+          //             "date": "Wed, 01 Sep 2021 15:22:02 GMT",
+          //             "content-length": "0",
+          //             "connection": "close",
+          //             "x-message-id": "6697MRVEQyykElM9hQ1byA",
+          //             "access-control-allow-origin": "https://sendgrid.api-docs.io",
+          //             "access-control-allow-methods": "POST",
+          //             "access-control-allow-headers": "Authorization, Content-Type, On-behalf-of, x-sg-elas-acl",
+          //             "access-control-max-age": "600",
+          //             "x-no-cors-reason": "https://sendgrid.com/docs/Classroom/Basics/API/cors.html",
+          //             "strict-transport-security": "max-age=600; includeSubDomains"
+          //         },
+          //         "request": {
+          //             "uri": {
+          //                 "protocol": "https:",
+          //                 "slashes": true,
+          //                 "auth": null,
+          //                 "host": "api.sendgrid.com",
+          //                 "port": 443,
+          //                 "hostname": "api.sendgrid.com",
+          //                 "hash": null,
+          //                 "search": null,
+          //                 "query": null,
+          //                 "pathname": "/v3/mail/send",
+          //                 "path": "/v3/mail/send",
+          //                 "href": "https://api.sendgrid.com/v3/mail/send"
+          //             },
+          //             "method": "POST",
+          //             "headers": {
+          //                 "Accept": "application/json",
+          //                 "User-agent": "sendgrid/6.5.5;nodejs",
+          //                 "Authorization": "Bearer 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",
+          //                 "content-type": "application/json",
+          //                 "content-length": 271
+          //             }
+          //         }
+          //     },
+          //     null
+          // ]
           return res.json(response);
         })
         .catch((error) => {
