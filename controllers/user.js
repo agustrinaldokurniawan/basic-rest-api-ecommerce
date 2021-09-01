@@ -179,7 +179,7 @@ class UserController {
           //             "headers": {
           //                 "Accept": "application/json",
           //                 "User-agent": "sendgrid/6.5.5;nodejs",
-          //                 "Authorization": "Bearer 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",
+          //                 "Authorization": "key",
           //                 "content-type": "application/json",
           //                 "content-length": 271
           //             }
