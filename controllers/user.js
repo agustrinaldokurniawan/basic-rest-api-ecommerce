@@ -1,95 +1,54 @@
+const { default: axios } = require("axios");
+const bcrypt = require("bcrypt");
+const saltRounds = 10;
+
 const User = require("../models/user");
-const jwt = require("jsonwebtoken");
-
-const CryptoJS = require("crypto-js");
-const secret = "somesecret";
-
-const Kozii = require("../models/kozii");
-const Mitra = require("../models/mitra");
-const Merchant = require("../models/merchant");
-
-const ValidationHelper = require("../helper/validation");
+const sgMail = require("@sendgrid/mail");
+sgMail.setApiKey(process.env.SENDGRID_API_KEY);
 
 class UserController {
   static async signup(req, res) {
     try {
-      const { nama, email, alamat, password, userID, appPin, device, type } =
-        await req.body;
+      const { phoneNumber, email, password } = await req.body;
 
-      if (!nama) {
-        throw {
-          message: "nama is needed",
-          status: 400,
-        };
-      }
-      const stringValidate = await ValidationHelper.validateString(nama);
-      if (!stringValidate) {
-        throw {
-          message: "Name doesn't valid",
-          status: 400,
-        };
-      }
+      const searchQueryByEmail = await { "loginInfo.email": email };
 
-      if (!email) {
-        throw {
-          message: "email is needed",
-          status: 400,
-        };
-      }
+      const user = await User.findOne(searchQueryByEmail).lean();
 
-      const emailValidate = await ValidationHelper.validateEmail(email);
-      if (!emailValidate) {
-        throw {
-          message: "Email doesn't valid",
-          status: 400,
-        };
-      }
-
-      if (!password) {
-        throw {
-          message: "password is needed",
-          status: 400,
-        };
-      }
-      const passwordValidate = await ValidationHelper.validatePassword(
-        password
-      );
-      if (!passwordValidate) {
-        throw {
-          message: "Password doesn't valid",
-          status: 400,
-        };
-      }
-
-      const existingUser = await User.find({ email }).limit(1);
-
-      if (existingUser.length > 0) {
+      if (user) {
         throw {
           message: "Email already been registered",
-          existingUser,
-          status: 403,
         };
       }
 
-      //encrypt
-      var ciphertext = await CryptoJS.AES.encrypt(password, secret).toString();
+      const hashedPassword = await bcrypt
+        .hash(password, saltRounds)
+        .catch((error) => {
+          throw {
+            error,
+            message: "Error while hashing password",
+          };
+        });
 
-      const newUser = new User({
-        nama,
+      const userCoreInfo = await {
+        phoneNumber,
+      };
+
+      const loginInfo = await {
         email,
-        alamat,
-        password: ciphertext,
-        userID,
-        appPin,
-        device,
-        type,
+        password: hashedPassword,
+      };
+
+      const newUser = await User.create({
+        userCoreInfo,
+        loginInfo,
+      }).catch((error) => {
+        throw { error, message: "Error while create new user to db" };
       });
 
-      await newUser.save().then((docs) => {
-        return res.json({ user: docs });
-      });
+      return res.json(newUser);
     } catch (error) {
-      return res.status(error.status).json(error);
+      return res.status(500).json(error);
     }
   }
 
@@ -97,139 +56,101 @@ class UserController {
     try {
       const { email, password } = await req.body;
 
-      if (!email) {
-        throw {
-          message: "email is needed",
-          status: 400,
-        };
-      }
-      const emailValidate = await ValidationHelper.validateEmail(email);
-      if (!emailValidate) {
-        throw {
-          message: "Email doesn't valid",
-          status: 400,
-        };
-      }
+      const searchQueryByEmail = await { "loginInfo.email": email };
 
-      if (!password) {
-        throw {
-          message: "password is needed",
-          status: 400,
-        };
-      }
-      const passwordValidate = await ValidationHelper.validatePassword(
-        password
-      );
-      if (!passwordValidate) {
-        throw {
-          message: "Password doesn't valid",
-          status: 400,
-        };
-      }
-
-      const user = await User.findOne({ email });
+      const user = await User.findOne(searchQueryByEmail).lean();
 
       if (!user) {
         throw {
-          message: "User not found",
-          status: 404,
+          message: "Accound not found",
         };
       }
 
-      //decrypt
-      var bytes = await CryptoJS.AES.decrypt(user.password, secret);
-      var originalText = await bytes.toString(CryptoJS.enc.Utf8);
+      const registeredPassword = user.loginInfo.password;
 
-      if (password !== originalText) {
+      const passwordIsTrue = await bcrypt
+        .compare(password, registeredPassword)
+        .catch((err) => {
+          throw {
+            error,
+            message: "Error while checking password",
+          };
+        });
+
+      if (!passwordIsTrue) {
         throw {
-          message: "Password doesnt match",
-          status: 403,
+          message: "Wrong password",
         };
       }
 
-      const token = await jwt.sign(
-        {
-          exp: Math.floor(Date.now() / 1000) + 60 * 60,
-          data: user.email,
-        },
-        secret
-      );
-
-      return res.json({ token });
-    } catch (error) {
-      return res.status(error.status).json(error);
-    }
-  }
-
-  static async createSeller(req, res) {
-    try {
-      const { name, email, levelSeller } = await req.body;
-
-      if (!name || !email || !levelSeller) {
-        throw new Error("Some property required is missing");
-      }
-
-      const newSeller = await new Seller({
-        name,
-        email,
-        levelSeller,
-      });
-      console.log({ newSeller });
-      if (!newSeller.levelSeller) {
-        throw new Error("Error while create new Seller Object");
-      }
-
-      await newSeller.save();
-
-      return res.json(newSeller);
+      return res.json(user);
     } catch (error) {
       return res.status(500).json(error);
     }
   }
 
-  static async createKozii(req, res) {
+  static async resetPassword(req, res) {
     try {
-      const { name } = req.body;
+      const { email } = await req.body;
 
-      const newKozii = new Kozii({
-        name,
+      const searchQueryByEmail = await { "loginInfo.email": email };
+
+      const user = await User.findOne(searchQueryByEmail).exec();
+
+      if (!user) {
+        throw {
+          message: "User not found",
+        };
+      }
+
+      const newPassword = await Date.now().toString();
+      const hashedPassword = await bcrypt
+        .hash(newPassword, saltRounds)
+        .catch((error) => {
+          throw { error, message: "Error while hashing password" };
+        });
+
+      user.loginInfo.password = await hashedPassword;
+      await user.save().catch((error) => {
+        throw {
+          error,
+          message: "Error while saving new password",
+        };
       });
 
-      await newKozii.save();
+      const senderName = "Kozii";
+      const senderMail = "no-reply@kozii.id";
+      const templateResetPasswordId = "d-37d358642d594c0fab05a38bc9827e87";
 
-      return res.json(newKozii);
+      const msg = await {
+        to: {
+          email,
+        },
+        from: {
+          email: senderMail,
+          name: senderName,
+        },
+        templateId: templateResetPasswordId,
+        dynamic_template_data: {
+          email: email.toString(),
+          password: newPassword,
+        },
+      };
+
+      await sgMail
+        .send(msg)
+        .then((response) => {
+          return res.json(response);
+        })
+        .catch((error) => {
+          console.log(error);
+          throw {
+            error,
+            message: "Error while sending email",
+          };
+        });
     } catch (error) {
-      return res.status(500).json(error.message);
-    }
-  }
-  static async createMitra(req, res) {
-    try {
-      const { name } = req.body;
-
-      const newMitra = new Mitra({
-        name,
-      });
-
-      await newMitra.save();
-
-      return res.json(newMitra);
-    } catch (error) {
-      return res.status(500).json(error.message);
-    }
-  }
-  static async createMerchant(req, res) {
-    try {
-      const { name } = req.body;
-
-      const newMerchant = new Merchant({
-        name,
-      });
-
-      await newMerchant.save();
-
-      return res.json(newMerchant);
-    } catch (error) {
-      return res.status(500).json(error.message);
+      return res.status(500).json(error);
     }
   }
 }

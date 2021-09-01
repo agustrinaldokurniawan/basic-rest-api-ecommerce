@@ -8,6 +8,7 @@ try {
     .connect("mongodb://localhost:27017/first", {
       useNewUrlParser: true,
       useUnifiedTopology: true,
+      useCreateIndex: true,
     })
     .catch((err) => {
       throw new Error(err);
@@ -29,6 +30,10 @@ try {
   const feedRoutes = require("./routes/feed");
   const notifRoutes = require("./routes/notification");
 
+  const merchantRoutes = require("./routes/merchant");
+
+  const bankRoutes = require("./routes/bank");
+
   const xenditInvoice = require("./routes/xendit/invoice");
   const xenditAccount = require("./routes/xendit/account");
   const xenditTransfer = require("./routes/xendit/transfer");
@@ -42,6 +47,10 @@ try {
   app.use("/email", emailRoutes);
   app.use("/feed", feedRoutes);
   app.use("/notif", notifRoutes);
+
+  app.use("/merchant", merchantRoutes);
+
+  app.use("/bank", bankRoutes);
 
   app.use("/xendit/invoice", xenditInvoice);
   app.use("/xendit/account", xenditAccount);
